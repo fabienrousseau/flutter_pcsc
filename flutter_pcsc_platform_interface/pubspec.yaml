@@ -2,7 +2,6 @@ name: flutter_pcsc_platform_interface
 description: A common platform interface for  the flutter_pcsc plugin
 version: 0.0.1
 repository: https://github.com/fabienrousseau/flutter_pcsc 
-publish_to: none
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
