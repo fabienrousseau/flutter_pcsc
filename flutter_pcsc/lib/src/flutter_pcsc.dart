@@ -7,43 +7,57 @@ import 'package:flutter_pcsc_linux/flutter_pcsc_linux.dart';
 import 'package:flutter_pcsc_macos/flutter_pcsc_macos.dart';
 import 'package:flutter_pcsc_platform_interface/flutter_pcsc_platform_interface.dart';
 import 'package:flutter_pcsc_windows/flutter_pcsc_windows.dart';
-
+/// The main class to use to deal with PCSC.
 class Pcsc {
+
+  /// Establishes a PCSC context.
   static Future<int> establishContext(PcscSCope scope) {
     return _platform.establishContext(scopeToInt(scope));
   }
 
+  /// Lists available readers for this context.
   static Future<List<String>> listReaders(int context) {
     return _platform.listReaders(context);
   }
 
+  /// Connects to the card using the specified reader.
   static Future<CardStruct> cardConnect(int context, String reader,
       PcscShare share, PcscProtocol protocol) async {
     return CardStruct.fromMap(await _platform.cardConnect(
         context, reader, shareToInt(share), protocolToInt(protocol)));
   }
 
+  /// Transmits an APDU to the card.
   static Future<List<int>> transmit(CardStruct card, List<int> commandBytes) {
     return _platform.transmit(
         card.hCard, protocolToInt(card.activeProtocol), commandBytes);
   }
 
+  /// Disconnects from the card.
   static Future<void> cardDisconnect(int hCard, PcscDisposition disposition) {
     return _platform.cardDisconnect(hCard, dispositionToInt(disposition));
   }
 
+  /// Releases the PCSC context.
   static Future<void> releaseContext(int context) {
     return _platform.releaseContext(context);
   }
 
+  /// Waits for a card to be present on the specified reader.
+  ///
+  /// If a card is already present, it does not wait.
   static Future<Map> waitForCardPresent(int context, String readerName) {
     return _platform.waitForCardPresent(context, readerName);
   }
 
+  /// Waits for a card to be removed on the specified reader.
+  ///
+  /// If a card is already removed, it does not wait.
   static Future<void> waitForCardRemoved(int context, String readerName) {
     return _platform.waitForCardRemoved(context, readerName);
   }
 
+  /// Converts a scope to its corresponding identifier.
   static int scopeToInt(PcscSCope scope) {
     switch (scope) {
       case PcscSCope.user:
@@ -55,6 +69,7 @@ class Pcsc {
     }
   }
 
+  /// Converts a protocol to its corresponding identifier.
   static int protocolToInt(PcscProtocol protocol) {
     switch (protocol) {
       case PcscProtocol.undefined:
@@ -72,6 +87,7 @@ class Pcsc {
     }
   }
 
+  /// Converts a protocol identifier to its corresponding enum.
   static PcscProtocol intToProtocol(int protocol) {
     switch (protocol) {
       case PcscConstants.SCARD_PROTOCOL_UNDEFINED:
@@ -91,6 +107,7 @@ class Pcsc {
     }
   }
 
+  /// Converts a share mode to its corresponding identifier.
   static int shareToInt(PcscShare share) {
     switch (share) {
       case PcscShare.exclusive:
@@ -102,6 +119,7 @@ class Pcsc {
     }
   }
 
+  /// Converts a disposition method to its corresponding identifier.
   static int dispositionToInt(PcscDisposition disposition) {
     switch (disposition) {
       case PcscDisposition.leaveCard:
@@ -116,9 +134,13 @@ class Pcsc {
   }
 }
 
+/// Represents a card.
 class CardStruct {
+  /// The card handle.
   final int hCard;
+  /// The active protocol (T=0 or T=1 for example).
   final PcscProtocol activeProtocol;
+  /// The name of the smartcard reader.
   final String readerName;
 
   CardStruct(this.hCard, this.activeProtocol, this.readerName);
@@ -129,12 +151,16 @@ class CardStruct {
   }
 }
 
+/// Represents the different PCSC scopes.
 enum PcscSCope { user, terminal, system }
 
+/// Represents the different PCSC protocols
 enum PcscProtocol { undefined, t0, t1, raw, t15, any }
 
+/// Represents the different PCSC share modes.
 enum PcscShare { exclusive, shared, direct }
 
+/// Represents the different disposition methods.
 enum PcscDisposition { leaveCard, resetCard, unpowerCard, ejectCard }
 
 // issue 81421

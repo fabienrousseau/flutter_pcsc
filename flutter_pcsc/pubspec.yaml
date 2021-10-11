@@ -1,6 +1,6 @@
 name: flutter_pcsc
 description: Flutter plugin to access PCSC readers on Linux/Windows/MacOS
-version: 0.0.1
+version: 0.0.2
 repository: https://github.com/fabienrousseau/flutter_pcsc
 
 environment:
@@ -28,3 +28,11 @@ dev_dependencies:
 
 # The following section is specific to Flutter.
 flutter:
+  plugin:
+    platforms:
+      linux:
+        default_package: flutter_pcsc_linux
+      macos:
+        default_package: flutter_pcsc_macos
+      windows:
+        default_package: flutter_pcsc_windows
