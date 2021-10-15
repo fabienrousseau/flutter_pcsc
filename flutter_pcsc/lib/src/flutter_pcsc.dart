@@ -7,9 +7,9 @@ import 'package:flutter_pcsc_linux/flutter_pcsc_linux.dart';
 import 'package:flutter_pcsc_macos/flutter_pcsc_macos.dart';
 import 'package:flutter_pcsc_platform_interface/flutter_pcsc_platform_interface.dart';
 import 'package:flutter_pcsc_windows/flutter_pcsc_windows.dart';
+
 /// The main class to use to deal with PCSC.
 class Pcsc {
-
   /// Establishes a PCSC context.
   static Future<int> establishContext(PcscSCope scope) {
     return _platform.establishContext(scopeToInt(scope));
@@ -138,8 +138,10 @@ class Pcsc {
 class CardStruct {
   /// The card handle.
   final int hCard;
+
   /// The active protocol (T=0 or T=1 for example).
   final PcscProtocol activeProtocol;
+
   /// The name of the smartcard reader.
   final String readerName;
 
