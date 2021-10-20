@@ -41,7 +41,7 @@ abstract class PcscPlatform extends PlatformInterface {
   }
 
   Future<List<int>> transmit(
-      int hCard, int activeProtocol, List<int> commandBytes) {
+      int hCard, int activeProtocol, List<int> commandBytes, { bool newIsolate = false}) {
     throw UnimplementedError('transmit() has not been implemented.');
   }
 
