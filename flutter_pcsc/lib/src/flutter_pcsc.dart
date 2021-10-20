@@ -28,9 +28,11 @@ class Pcsc {
   }
 
   /// Transmits an APDU to the card.
-  static Future<List<int>> transmit(CardStruct card, List<int> commandBytes) {
+  static Future<List<int>> transmit(CardStruct card, List<int> commandBytes,
+      {bool newIsolate = false}) {
     return _platform.transmit(
-        card.hCard, protocolToInt(card.activeProtocol), commandBytes);
+        card.hCard, protocolToInt(card.activeProtocol), commandBytes,
+        newIsolate: newIsolate);
   }
 
   /// Disconnects from the card.

@@ -1,3 +1,8 @@
+## 0.0.4
+
+* Allow transmit() to be executed in a new Isolate
+* Clean waitFor* methods
+
 ## 0.0.3
 
 * Fix dart format issue
