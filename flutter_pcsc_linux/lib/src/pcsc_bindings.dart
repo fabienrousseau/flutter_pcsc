@@ -129,96 +129,8 @@ class PCSCBinding {
     }
   }
 
-  Future<void> cardDisconnect(int hCard, int disposition) async {
-    var res = _nlwinscard.SCardDisconnect(hCard, disposition);
-    _checkAndThrow(res, 'Error while disconnecting card');
-  }
-
-  Future<void> releaseContext(int context) async {
-    var res = _nlwinscard.SCardReleaseContext(context);
-    _checkAndThrow(res, 'Error while releasing context');
-  }
-
-  Future<Map> waitForCardPresent(int context, String readerName) async {
-    ffi.Pointer<SCARD_READERSTATE> rgReaderStates = calloc<SCARD_READERSTATE>();
-
-    rgReaderStates.ref.szReader = readerName.toNativeUtf8().cast();
-    rgReaderStates.ref.dwCurrentState = PcscConstants.SCARD_STATE_UNAWARE;
-
-    try {
-      var res = _nlwinscard.SCardGetStatusChange(
-          context, PcscConstants.SCARD_INFINITE, rgReaderStates, 1);
-      _checkAndThrow(res, 'Error while waiting for card');
-
-      if (rgReaderStates.ref.dwEventState & PcscConstants.SCARD_STATE_EMPTY !=
-          0) {
-        return await compute(_computeFunction, {
-          'context': context,
-          'readerName': readerName,
-          'currentState': rgReaderStates.ref.dwEventState
-        });
-      } else {
-        return _buildMapData(rgReaderStates.ref);
-      }
-    } finally {
-      calloc.free(rgReaderStates.ref.szReader);
-      calloc.free(rgReaderStates);
-    }
-  }
-
-  Future<void> waitForCardRemoved(int context, String readerName) async {
-    ffi.Pointer<SCARD_READERSTATE> rgReaderStates = calloc<SCARD_READERSTATE>();
-
-    rgReaderStates.ref.szReader = readerName.toNativeUtf8().cast();
-    rgReaderStates.ref.dwCurrentState = PcscConstants.SCARD_STATE_UNAWARE;
-
-    try {
-      var res = _nlwinscard.SCardGetStatusChange(
-          context, PcscConstants.SCARD_INFINITE, rgReaderStates, 1);
-      _checkAndThrow(res, 'Error while waiting for card removal');
-
-      if (rgReaderStates.ref.dwEventState & PcscConstants.SCARD_STATE_PRESENT !=
-          0) {
-        await compute(_computeFunction, {
-          'context': context,
-          'readerName': readerName,
-          'currentState': rgReaderStates.ref.dwEventState
-        });
-      }
-    } finally {
-      calloc.free(rgReaderStates.ref.szReader);
-      calloc.free(rgReaderStates);
-    }
-  }
-
-  Map _buildMapData(SCARD_READERSTATE readerState) {
-    Map pcscData = {};
-    Uint8List atr = Uint8List(readerState.cbAtr);
-    for (int i = 0; i < readerState.cbAtr; i++) {
-      atr[i] = readerState.rgbAtr[i];
-    }
-    pcscData['atr'] = atr;
-
-    Map data = {};
-    data['pcsc_tag'] = pcscData;
-
-    return data;
-  }
-
-  /*
-   * This computeFunction allows to run a blocking C function in an Isolate
-   */
-  static Future<Map> _computeFunction(Map map) async {
-    PCSCBinding binding = PCSCBinding();
-    return binding._scardGetStatusChange(
-        map['context'], map['readerName'], map['currentState']);
-  }
-
-  /*
-   * The method that will run inside the Isolate
-   */
-  Future<Map> _scardGetStatusChange(
-      int context, String readerName, int currentState) async {
+  Future<Map> cardGetStatusChange(int context, String readerName,
+      {int currentState = PcscConstants.SCARD_STATE_UNAWARE}) async {
     ffi.Pointer<SCARD_READERSTATE> rgReaderStates = calloc<SCARD_READERSTATE>();
 
     rgReaderStates.ref.szReader = readerName.toNativeUtf8().cast();
@@ -235,6 +147,68 @@ class PCSCBinding {
       calloc.free(rgReaderStates.ref.szReader);
       calloc.free(rgReaderStates);
     }
+  }
+
+  Future<void> cardDisconnect(int hCard, int disposition) async {
+    var res = _nlwinscard.SCardDisconnect(hCard, disposition);
+    _checkAndThrow(res, 'Error while disconnecting card');
+  }
+
+  Future<void> releaseContext(int context) async {
+    var res = _nlwinscard.SCardReleaseContext(context);
+    _checkAndThrow(res, 'Error while releasing context');
+  }
+
+  Future<Map> waitForCardPresent(int context, String readerName) async {
+    Map map = await cardGetStatusChange(context, readerName);
+    int currentState = map['pcsc_tag']['event_state'];
+
+    if (currentState & PcscConstants.SCARD_STATE_EMPTY != 0) {
+      return await compute(_computeFunctionCardGetStatusChange, {
+        'context': context,
+        'reader_name': readerName,
+        'current_state': currentState
+      });
+    } else {
+      return map;
+    }
+  }
+
+  Future<void> waitForCardRemoved(int context, String readerName) async {
+    Map map = await cardGetStatusChange(context, readerName);
+    int currentState = map['pcsc_tag']['event_state'];
+
+    if (currentState & PcscConstants.SCARD_STATE_PRESENT != 0) {
+      await compute(_computeFunctionCardGetStatusChange, {
+        'context': context,
+        'reader_name': readerName,
+        'current_state': currentState
+      });
+    }
+  }
+
+  /*
+   * This computeFunction allows to run a blocking C function in an Isolate
+   */
+  static Future<Map> _computeFunctionCardGetStatusChange(Map map) async {
+    PCSCBinding binding = PCSCBinding();
+    return binding.cardGetStatusChange(map['context'], map['reader_name'],
+        currentState: map['current_state']);
+  }
+
+  Map _buildMapData(SCARD_READERSTATE readerState) {
+    Map pcscData = {};
+    Uint8List atr = Uint8List(readerState.cbAtr);
+    for (int i = 0; i < readerState.cbAtr; i++) {
+      atr[i] = readerState.rgbAtr[i];
+    }
+    pcscData['atr'] = atr;
+    pcscData['event_state'] = readerState.dwEventState;
+
+    Map data = {};
+    data['pcsc_tag'] = pcscData;
+
+    return data;
   }
 
   List<String> _decodemstr(Int8List list) {

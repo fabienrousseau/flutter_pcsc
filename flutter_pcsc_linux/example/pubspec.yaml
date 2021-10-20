@@ -14,9 +14,7 @@ dependencies:
 
   flutter_pcsc_linux:
     path: ../
-  flutter_pcsc_platform_interface:
-    path: ../../flutter_pcsc_platform_interface
-
+  flutter_pcsc_platform_interface: ^0.0.1
   cupertino_icons: ^1.0.2
 
 dev_dependencies:

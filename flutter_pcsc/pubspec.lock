@@ -51,7 +51,7 @@ packages:
     source: hosted
     version: "1.2.0"
   ffi:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: ffi
       url: "https://pub.dartlang.org"
@@ -72,30 +72,30 @@ packages:
   flutter_pcsc_linux:
     dependency: "direct main"
     description:
-      path: "../flutter_pcsc_linux"
-      relative: true
-    source: path
+      name: flutter_pcsc_linux
+      url: "https://pub.dartlang.org"
+    source: hosted
     version: "0.0.1"
   flutter_pcsc_macos:
     dependency: "direct main"
     description:
-      path: "../flutter_pcsc_macos"
-      relative: true
-    source: path
+      name: flutter_pcsc_macos
+      url: "https://pub.dartlang.org"
+    source: hosted
     version: "0.0.1"
   flutter_pcsc_platform_interface:
     dependency: "direct main"
     description:
-      path: "../flutter_pcsc_platform_interface"
-      relative: true
-    source: path
+      name: flutter_pcsc_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
     version: "0.0.1"
   flutter_pcsc_windows:
     dependency: "direct main"
     description:
-      path: "../flutter_pcsc_windows"
-      relative: true
-    source: path
+      name: flutter_pcsc_windows
+      url: "https://pub.dartlang.org"
+    source: hosted
     version: "0.0.1"
   flutter_test:
     dependency: "direct dev"
