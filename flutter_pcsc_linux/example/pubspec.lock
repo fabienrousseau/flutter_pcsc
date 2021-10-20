@@ -89,7 +89,7 @@ packages:
       name: flutter_pcsc_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.0.1"
+    version: "0.0.2"
   flutter_test:
     dependency: "direct dev"
     description: flutter

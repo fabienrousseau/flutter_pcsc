@@ -34,8 +34,10 @@ class PcscMacOS extends PcscPlatform {
 
   @override
   Future<List<int>> transmit(
-      int hCard, int activeProtocol, List<int> commandBytes) {
-    return _binding.transmit(hCard, activeProtocol, commandBytes);
+      int hCard, int activeProtocol, List<int> commandBytes,
+      {bool newIsolate = false}) {
+    return _binding.transmit(hCard, activeProtocol, commandBytes,
+        newIsolate: newIsolate);
   }
 
   @override

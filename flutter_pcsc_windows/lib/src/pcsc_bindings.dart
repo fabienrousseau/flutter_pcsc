@@ -102,6 +102,16 @@ class PCSCBinding {
     }
   }
 
+  Future<Uint8List> transmit(
+      int hCard, int activeProtocol, List<int> sendCommand,
+      {bool newIsolate = false}) {
+    if (newIsolate) {
+      return _transmitInNewIsolate(hCard, activeProtocol, sendCommand);
+    } else {
+      return _transmitInSameIsolate(hCard, activeProtocol, sendCommand);
+    }
+  }
+
   Future<Map> cardGetStatusChange(int context, String readerName,
       {int currentState = PcscConstants.SCARD_STATE_UNAWARE}) async {
     ffi.Pointer<SCARD_READERSTATEA> rgReaderStates =
@@ -120,31 +130,6 @@ class PCSCBinding {
     } finally {
       calloc.free(rgReaderStates.ref.szReader);
       calloc.free(rgReaderStates);
-    }
-  }
-
-  Future<Uint8List> transmit(
-      int hCard, int activeProtocol, List<int> sendCommand) {
-    var nativeSendCommand = _allocateNative(sendCommand);
-
-    var pcbRecvLength = calloc<DWORD>();
-    pcbRecvLength.value = PcscConstants.MAX_BUFFER_SIZE_EXTENDED;
-    var pbRecvBuffer = calloc<ffi.Uint8>(pcbRecvLength.value);
-
-    try {
-      ffi.Pointer<SCARD_IO_REQUEST> pioSendPci = _getPCI(activeProtocol);
-
-      var res = _nlwinscard.SCardTransmit(hCard, pioSendPci, nativeSendCommand,
-          sendCommand.length, _nullptr, pbRecvBuffer, pcbRecvLength);
-      _checkAndThrow(res, 'Error while transmitting to card');
-
-      Uint8List response = _asUint8List(pbRecvBuffer, pcbRecvLength.value);
-
-      return Future.value(response);
-    } finally {
-      calloc.free(nativeSendCommand);
-      calloc.free(pcbRecvLength);
-      calloc.free(pbRecvBuffer);
     }
   }
 
@@ -189,10 +174,54 @@ class PCSCBinding {
   /*
    * This computeFunction allows to run a blocking C function in an Isolate
    */
+  static Future<Uint8List> _computeFunctionTransmit(Map map) async {
+    PCSCBinding binding = PCSCBinding();
+    return binding.transmit(
+        map['h_card'], map['active_protocol'], map['command'],
+        newIsolate: false);
+  }
+
+  /*
+   * This computeFunction allows to run a blocking C function in an Isolate
+   */
   static Future<Map> _computeFunctionCardGetStatusChange(Map map) async {
     PCSCBinding binding = PCSCBinding();
     return binding.cardGetStatusChange(map['context'], map['reader_name'],
         currentState: map['current_state']);
+  }
+
+  Future<Uint8List> _transmitInNewIsolate(
+      int hCard, int activeProtocol, List<int> sendCommand) {
+    return compute(_computeFunctionTransmit, {
+      'h_card': hCard,
+      'active_protocol': activeProtocol,
+      'command': sendCommand
+    });
+  }
+
+  Future<Uint8List> _transmitInSameIsolate(
+      int hCard, int activeProtocol, List<int> sendCommand) {
+    var nativeSendCommand = _allocateNative(sendCommand);
+
+    var pcbRecvLength = calloc<DWORD>();
+    pcbRecvLength.value = PcscConstants.MAX_BUFFER_SIZE_EXTENDED;
+    var pbRecvBuffer = calloc<ffi.Uint8>(pcbRecvLength.value);
+
+    try {
+      ffi.Pointer<SCARD_IO_REQUEST> pioSendPci = _getPCI(activeProtocol);
+
+      var res = _nlwinscard.SCardTransmit(hCard, pioSendPci, nativeSendCommand,
+          sendCommand.length, _nullptr, pbRecvBuffer, pcbRecvLength);
+      _checkAndThrow(res, 'Error while transmitting to card');
+
+      Uint8List response = _asUint8List(pbRecvBuffer, pcbRecvLength.value);
+
+      return Future.value(response);
+    } finally {
+      calloc.free(nativeSendCommand);
+      calloc.free(pcbRecvLength);
+      calloc.free(pbRecvBuffer);
+    }
   }
 
   Map _buildMapData(SCARD_READERSTATEA readerState) {

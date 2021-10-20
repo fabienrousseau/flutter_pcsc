@@ -1,6 +1,7 @@
 import 'package:flutter_pcsc_linux/src/pcsc_bindings.dart';
 import 'package:flutter_pcsc_platform_interface/flutter_pcsc_platform_interface.dart';
 
+
 class PcscLinux extends PcscPlatform {
   static void registerWith() {
     PcscPlatform.instance = PcscLinux();
@@ -34,8 +35,10 @@ class PcscLinux extends PcscPlatform {
 
   @override
   Future<List<int>> transmit(
-      int hCard, int activeProtocol, List<int> commandBytes) {
-    return _binding.transmit(hCard, activeProtocol, commandBytes);
+      int hCard, int activeProtocol, List<int> commandBytes,
+      {bool newIsolate = false}) {
+    return _binding.transmit(hCard, activeProtocol, commandBytes,
+        newIsolate: newIsolate);
   }
 
   @override

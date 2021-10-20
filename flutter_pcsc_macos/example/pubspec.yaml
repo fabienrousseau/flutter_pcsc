@@ -14,7 +14,7 @@ dependencies:
 
   flutter_pcsc_macos:
     path: ../
-  flutter_pcsc_platform_interface: ^0.0.1
+  flutter_pcsc_platform_interface: ^0.0.2
 
   cupertino_icons: ^1.0.2
 
