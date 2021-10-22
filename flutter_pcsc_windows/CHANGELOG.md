@@ -1,3 +1,7 @@
+## 0.0.3
+
+* Add comments to improve pub.dev score
+
 ## 0.0.2
 
 * Allow transmit() to be executed in a separate Isolate
